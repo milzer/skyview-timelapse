@@ -73,7 +73,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--window-size', nargs=2, type=int, default=(1920, 1080))
     parser.add_argument('-d', '--driver-path', type=pathlib.Path, default=None)
     parser.add_argument('-i', '--interval', type=int, required=True)
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument('-n', '--num-screenshots', type=int)
     group.add_argument('-t', '--time', type=time2seconds)
     args = parser.parse_args()
@@ -125,16 +125,31 @@ if __name__ == '__main__':
 
         if args.num_screenshots:
             num_screenshots = args.num_screenshots
-        else:
+        elif args.time:
             num_screenshots = int(args.time / args.interval)
+        else:
+            num_screenshots = 0
 
-        digits = len(str(num_screenshots))
+        if num_screenshots:
+            digits = len(str(num_screenshots))
+        else:
+            digits = 8
 
-        for i in range(num_screenshots):
-            screenshot_path = screenshots_dir / f'{i:0{digits}d}.png'
-            player.screenshot(str(screenshot_path))
-            print(f'Saved {screenshot_path}')
-            time.sleep(args.interval)
+        try:
+            i = 0
+            while True:
+                if args.num_screenshots and i >= num_screenshots:
+                    break
+
+                screenshot_path = screenshots_dir / f'{i:0{digits}d}.png'
+                player.screenshot(str(screenshot_path))
+                print(f'Saved {screenshot_path}')
+                time.sleep(args.interval)
+
+                i += 1
+
+        except KeyboardInterrupt:
+            print('Quitting...')
 
         # TODO: run ffmpeg or provide a sample command line
 
